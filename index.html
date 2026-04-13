@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Your Terpene Direction</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+ 
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+ 
+    .widget {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 36px 24px 32px;
+    }
+ 
+    /* Header */
+    .widget-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1B3A2F;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+ 
+    .widget-eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      background: #D4A04A;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+ 
+    .widget-title {
+      font-size: clamp(20px, 4vw, 24px);
+      font-weight: 800;
+      color: #1B3A2F;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+ 
+    .widget-subtitle {
+      font-size: 14px;
+      color: #7A8B82;
+      line-height: 1.55;
+      margin-bottom: 28px;
+    }
+ 
+    /* Cards grid */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+ 
+    @media (max-width: 460px) {
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+ 
+    .card {
+      background: #ffffff;
+      border: 1.5px solid #E0E8E2;
+      border-radius: 14px;
+      padding: 18px 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+      text-align: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+ 
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+ 
+    .card[data-type="sensual"]::after  { background: rgba(220, 168, 156, 0.08); }
+    .card[data-type="energetic"]::after { background: rgba(140, 185, 140, 0.08); }
+    .card[data-type="present"]::after   { background: rgba(170, 155, 210, 0.08); }
+ 
+    .card:hover {
+      border-color: #1B3A2F;
+      box-shadow: 0 6px 20px rgba(27, 58, 47, 0.1);
+      transform: translateY(-2px);
+    }
+ 
+    .card:hover::after { opacity: 1; }
+ 
+    .card.active {
+      border-color: #1B3A2F;
+      border-width: 2px;
+      box-shadow: 0 6px 20px rgba(27, 58, 47, 0.12);
+    }
+ 
+    .card.active::after { opacity: 1; }
+ 
+    .card-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+ 
+    .card:hover .card-swatch,
+    .card.active .card-swatch {
+      transform: scale(1.1);
+    }
+ 
+    .card[data-type="sensual"]  .card-swatch { background: #E8C0B8; }
+    .card[data-type="energetic"] .card-swatch { background: #A8C8A0; }
+    .card[data-type="present"]   .card-swatch { background: #BEB4E0; }
+ 
+    .card-check {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 16px;
+      height: 16px;
+      background: #1B3A2F;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+ 
+    .card.active .card-check {
+      opacity: 1;
+      transform: scale(1);
+    }
+ 
+    .card-check::after {
+      content: '';
+      width: 5px;
+      height: 3px;
+      border-left: 1.5px solid #fff;
+      border-bottom: 1.5px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+      display: block;
+    }
+ 
+    .card-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #1B3A2F;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+ 
+    .card-hint {
+      font-size: 11.5px;
+      color: #7A8B82;
+      line-height: 1.45;
+    }
+ 
+    /* Result panel */
+    .result-wrap {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+ 
+    .result-wrap.open {
+      max-height: 500px;
+    }
+ 
+    .result {
+      background: #F8F6F2;
+      border-radius: 14px;
+      padding: 22px 22px 20px;
+      border-left: 3px solid #1B3A2F;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+    }
+ 
+    .result-wrap.open .result {
+      opacity: 1;
+      transform: translateY(0);
+    }
+ 
+    .result-meta {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #7A8B82;
+      margin-bottom: 6px;
+    }
+ 
+    .result-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #1B3A2F;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+ 
+    .result-body {
+      font-size: 13.5px;
+      color: #4A5D53;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+ 
+    .result-coa {
+      background: #ffffff;
+      border: 1px solid #D8E4D8;
+      border-radius: 10px;
+      padding: 11px 15px;
+      font-size: 12.5px;
+      color: #4A5D53;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+ 
+    .result-coa strong {
+      color: #1B3A2F;
+      font-weight: 700;
+    }
+ 
+    .result-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1B3A2F;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 11px 22px;
+      border-radius: 24px;
+      letter-spacing: 0.03em;
+      transition: background 0.18s ease, transform 0.18s ease;
+      cursor: pointer;
+    }
+ 
+    .result-cta:hover {
+      background: #2d5a3d;
+      transform: translateY(-1px);
+    }
+ 
+    .result-cta-arrow {
+      font-size: 15px;
+      transition: transform 0.18s ease;
+      line-height: 1;
+    }
+ 
+    .result-cta:hover .result-cta-arrow {
+      transform: translateX(3px);
+    }
+ 
+    /* Footer nudge */
+    .widget-footer {
+      font-size: 11px;
+      color: #B0BDB7;
+      text-align: center;
+      margin-top: 18px;
+      letter-spacing: 0.01em;
+    }
+  </style>
+</head>
+<body>
+ 
+<div class="widget">
+ 
+  <div class="widget-eyebrow">
+    <span class="widget-eyebrow-dot"></span>
+    Terpene Guide
+  </div>
+ 
+  <h2 class="widget-title">What Kind of Evening Are You Planning?</h2>
+  <p class="widget-subtitle">Select a vibe and we'll show you which terpene direction to look for.</p>
+ 
+  <div class="cards">
+ 
+    <div class="card" data-type="sensual" onclick="selectCard(this, 'sensual')" role="button" tabindex="0" aria-label="Slow and Sensual">
+      <div class="card-swatch">
+        <div class="card-check"></div>
+      </div>
+      <span class="card-label">Slow &amp; Sensual</span>
+      <span class="card-hint">Deep relaxation, heightened sensation</span>
+    </div>
+ 
+    <div class="card" data-type="energetic" onclick="selectCard(this, 'energetic')" role="button" tabindex="0" aria-label="Playful and Energetic">
+      <div class="card-swatch">
+        <div class="card-check"></div>
+      </div>
+      <span class="card-label">Playful &amp; Energetic</span>
+      <span class="card-hint">Uplifted mood, light &amp; engaged</span>
+    </div>
+ 
+    <div class="card" data-type="present" onclick="selectCard(this, 'present')" role="button" tabindex="0" aria-label="Clear and Present">
+      <div class="card-swatch">
+        <div class="card-check"></div>
+      </div>
+      <span class="card-label">Clear &amp; Present</span>
+      <span class="card-hint">Calm focus, stay in the moment</span>
+    </div>
+ 
+  </div>
+ 
+  <div class="result-wrap" id="resultWrap">
+    <div class="result" id="result">
+      <div class="result-meta" id="resultMeta"></div>
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-body" id="resultBody"></div>
+      <div class="result-coa" id="resultCoa"></div>
+      <a class="result-cta" id="resultCta" href="https://mood.com/shop/product-mood?filter=aroused" target="_blank">
+        Shop the Aroused Category <span class="result-cta-arrow">&#8594;</span>
+      </a>
+    </div>
+  </div>
+ 
+  <p class="widget-footer" id="footerNudge">Select a card above to get started</p>
+ 
+</div>
+ 
+<script>
+  var data = {
+    sensual: {
+      meta: 'Your Terpene Direction',
+      title: 'Myrcene-Forward',
+      body: 'Myrcene-heavy products promote body relaxation and heightened tactile sensitivity. This is the direction for a slower, more deliberate evening where physical ease and deeper sensation are the focus.',
+      coa: '<strong>What to look for on a COA:</strong> Myrcene listed first or second in the terpene profile by weight%. A moderate concentration keeps things relaxed without tipping into sedation.'
+    },
+    energetic: {
+      meta: 'Your Terpene Direction',
+      title: 'Limonene-Forward',
+      body: 'Limonene-heavy products uplift your mood and encourage mental engagement. This is the direction for a lighter, more playful evening where energy and presence are the focus.',
+      coa: '<strong>What to look for on a COA:</strong> Limonene or terpinolene listed at the top of the terpene profile by weight%. The higher the %, the more pronounced the uplifting effect.'
+    },
+    present: {
+      meta: 'Your Terpene Direction',
+      title: 'Linalool + THCv',
+      body: 'Linalool promotes calm without heavy sedation. Paired with CBD and THCv, it supports mental presence and focus — the right direction when you want to ease into the moment and stay there.',
+      coa: '<strong>What to look for on a COA:</strong> Linalool in the top terpenes by weight%, combined with a CBD-inclusive cannabinoid ratio and THCv in the formula.'
+    }
+  };
+ 
+  function selectCard(el, type) {
+    document.querySelectorAll('.card').forEach(function(c) {
+      c.classList.remove('active');
+    });
+    el.classList.add('active');
+ 
+    var d = data[type];
+    document.getElementById('resultMeta').textContent  = d.meta;
+    document.getElementById('resultTitle').textContent = d.title;
+    document.getElementById('resultBody').textContent  = d.body;
+    document.getElementById('resultCoa').innerHTML     = d.coa;
+ 
+    var wrap = document.getElementById('resultWrap');
+    wrap.classList.add('open');
+ 
+    document.getElementById('footerNudge').textContent = 'Tap a different card to compare';
+ 
+    sendHeight();
+  }
+ 
+  // Keyboard support
+  document.querySelectorAll('.card').forEach(function(card) {
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectCard(card, card.getAttribute('data-type'));
+      }
+    });
+  });
+ 
+  // iframe height messaging
+  function sendHeight() {
+    setTimeout(function() {
+      var h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'resize', height: h }, '*');
+    }, 60);
+  }
+ 
+  if (typeof ResizeObserver !== 'undefined') {
+    var ro = new ResizeObserver(function() { sendHeight(); });
+    ro.observe(document.body);
+  }
+ 
+  window.addEventListener('load', sendHeight);
+</script>
+ 
+</body>
+</html>
